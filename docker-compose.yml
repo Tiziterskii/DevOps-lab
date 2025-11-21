@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Kontener z bazą danych SQL Server
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: demowebservice-db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    networks:
+      - demo-network
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourStrong@Passw0rd" -Q "SELECT 1" -C || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # Kontener z aplikacją Backend (ASP.NET Core Web API)
+  backend:
+    build:
+      context: .
+      dockerfile: DockerfileBuild
+    container_name: demowebservice-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=DemoWebDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+    ports:
+      - "8080:8080"
+    networks:
+      - demo-network
+    restart: unless-stopped
+
+  # Kontener z aplikacją Frontend (Nginx + HTML/JS)
+  frontend:
+    build:
+      context: .
+      dockerfile: DockerfileFrontend
+    container_name: demowebservice-frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - demo-network
+    restart: unless-stopped
+
+# Wirtualna sieć łącząca wszystkie kontenery
+networks:
+  demo-network:
+    driver: bridge
+
+# Wolumen dla danych bazy danych
+volumes:
+  sqldata:

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Web Service - Product Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛍️ Product Manager</h1>
+            <p class="subtitle">Frontend + Backend + Database w Docker Compose</p>
+        </header>
+
+        <div class="status-bar">
+            <div id="status" class="status-indicator">
+                <span class="status-dot"></span>
+                <span id="status-text">Sprawdzanie połączenia...</span>
+            </div>
+        </div>
+
+        <section class="add-product">
+            <h2>Dodaj nowy produkt</h2>
+            <form id="productForm">
+                <div class="form-group">
+                    <label for="name">Nazwa produktu:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Opis:</label>
+                    <textarea id="description" name="description" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="price">Cena (PLN):</label>
+                        <input type="number" id="price" name="price" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stock">Stan magazynowy:</label>
+                        <input type="number" id="stock" name="stock" min="0" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Dodaj produkt</button>
+            </form>
+        </section>
+
+        <section class="products-list">
+            <h2>Lista produktów</h2>
+            <div id="loading" class="loading">Ładowanie produktów...</div>
+            <div id="error" class="error" style="display: none;"></div>
+            <div id="products" class="products-grid"></div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

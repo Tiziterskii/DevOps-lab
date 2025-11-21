@@ -1,0 +1,22 @@
+# Etap 1: Build aplikacji
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /app
+
+# Kopiowanie pliku projektu i przywracanie zależności
+COPY Backend/*.csproj ./
+RUN dotnet restore
+
+# Kopiowanie pozostałych plików i budowanie aplikacji
+COPY Backend/ ./
+RUN dotnet publish -c Release -o out
+
+# Etap 2: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+COPY --from=build /app/out .
+
+# Eksponowanie portu 8080
+EXPOSE 8080
+
+# Uruchomienie aplikacji
+ENTRYPOINT ["dotnet", "Backend.dll"]
