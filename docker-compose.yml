@@ -36,7 +36,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=DemoWebDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
     ports:
-      - "8080:8080"
+      - "0.0.0.0:8080:8080"
     networks:
       - demo-network
     restart: unless-stopped
@@ -50,7 +50,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "3000:80"
+      - "0.0.0.0:3000:80"
     networks:
       - demo-network
     restart: unless-stopped

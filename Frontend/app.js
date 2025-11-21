@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:8080/api';
+// Automatyczne określenie URL API na podstawie hostname
+const API_URL = `http://${window.location.hostname}:8080/api`;
 
 // Sprawdzenie połączenia z backend
 async function checkHealth() {
