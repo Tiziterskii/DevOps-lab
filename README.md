@@ -47,6 +47,32 @@ Kompletna aplikacja webowa składająca się z 3 kontenerów Docker połączonyc
 
 ## 🚀 Uruchomienie
 
+### 🐧 Na serwerze Linux (deployment produkcyjny)
+
+**Szczegółowe instrukcje**: Zobacz [LINUX-SETUP.md](LINUX-SETUP.md)
+
+**Quick Start:**
+```bash
+# Sklonuj repo
+git clone https://github.com/Tiziterskii/DevOps-lab.git
+cd DevOps-lab
+
+# Uruchom automatyczny skrypt
+chmod +x start-linux.sh
+./start-linux.sh
+
+# LUB manualnie
+docker-compose up -d --build
+
+# Sprawdź IP serwera
+hostname -I
+
+# Otwórz w przeglądarce na swoim komputerze:
+# http://TWOJ_IP_SERWERA:3000
+```
+
+### 💻 Lokalnie na Windows (development)
+
 ### Docker Compose (Rekomendowane)
 
 #### Uruchomienie wszystkich 3 kontenerów:
