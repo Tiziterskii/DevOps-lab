@@ -1,0 +1,31 @@
+name: .NET Build Check
+
+# Uruchamiaj tylko na Twoich branchach
+on:
+  push:
+    branches: [ "my-branch", "new-branch" ]
+  pull_request:
+    branches: [ "my-branch", "new-branch" ]
+
+jobs:
+  build-dotnet:
+    # WAŻNE: Używamy Twojej maszyny wirtualnej
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Konfiguracja środowiska .NET 9.0
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    # Pobranie zależności (NuGet)
+    - name: Restore dependencies
+      run: dotnet restore Backend/Backend.csproj
+
+    # Próba kompilacji kodu
+    - name: Build
+      run: dotnet build Backend/Backend.csproj --no-restore
