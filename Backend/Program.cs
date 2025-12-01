@@ -24,18 +24,39 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Konfiguracja bazy danych SQL Server
+// Konfiguracja bazy danych: SQL Server lub fallback InMemory
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+var useInMemory = builder.Configuration.GetValue<bool>("USE_IN_MEMORY_DB")
+                 || string.IsNullOrWhiteSpace(connectionString);
+
+if (useInMemory)
+{
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseInMemoryDatabase("DemoWebDb"));
+    Console.WriteLine("[Startup] Using InMemory database (USE_IN_MEMORY_DB=true or missing connection string).");
+}
+else
+{
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(connectionString));
+    Console.WriteLine("[Startup] Using SQL Server with connection string.");
+}
 
 var app = builder.Build();
 
-// Inicjalizacja bazy danych
+// Inicjalizacja bazy danych / seed
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.EnsureCreated();
+        Console.WriteLine("[Startup] Database EnsureCreated succeeded.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Startup] Database initialization failed: {ex.Message}");
+    }
 }
 
 // Configure the HTTP request pipeline.

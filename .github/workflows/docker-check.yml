@@ -112,13 +112,16 @@ jobs:
           if [ "${FREE_MB}" -lt 5000 ]; then
             echo "Still <5GB free. Switching to minimal profile (app only, no db).";
             echo "COMPOSE_PROFILES=app" >> $GITHUB_ENV
+            echo "USE_IN_MEMORY_DB=true" >> $GITHUB_ENV
           else
             echo "Enough space after prune for full stack.";
             echo "COMPOSE_PROFILES=app,db" >> $GITHUB_ENV
+            echo "USE_IN_MEMORY_DB=false" >> $GITHUB_ENV
           fi
         else
           echo "Sufficient space (>=5GB). Using full stack.";
           echo "COMPOSE_PROFILES=app,db" >> $GITHUB_ENV
+          echo "USE_IN_MEMORY_DB=false" >> $GITHUB_ENV
         fi
 
     - name: Auto docker compose up on push to main
@@ -136,6 +139,7 @@ jobs:
           done
         fi
         echo "Using compose args: $PROFILE_ARGS"
+        echo "USE_IN_MEMORY_DB=$USE_IN_MEMORY_DB"
         docker compose $PROFILE_ARGS build
         docker compose $PROFILE_ARGS up -d
         docker compose ps || true
