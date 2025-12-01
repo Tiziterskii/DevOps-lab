@@ -7,6 +7,17 @@ on:
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Run docker compose up -d (self-hosted)"
+        required: false
+        type: boolean
+        default: false
+      pull:
+        description: "docker compose pull before build"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-docker-images:
@@ -39,6 +50,7 @@ jobs:
         echo "USER: $(whoami)"
         echo "ID: $(id)"
         docker --version || true
+        docker compose version || docker-compose --version || true
         groups || true
         echo "Docker socket perms:"
         ls -l /var/run/docker.sock || ls -l /run/docker.sock || true
@@ -60,8 +72,32 @@ jobs:
       # Buduje frontend używając Twojego pliku DockerfileFrontend
       run: docker build -f DockerfileFrontend -t demo-frontend:test .
 
+    - name: Optional docker compose pull
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.pull == true }}
+      run: |
+        echo "Pulling latest images (ignore failures for local builds)..."
+        docker compose pull || true
+
+    - name: Optional docker compose up (deploy on self-hosted)
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy == true && startsWith(github.ref, 'refs/heads/main') }}
+      env:
+        COMPOSE_DOCKER_CLI_BUILD: 1
+        DOCKER_BUILDKIT: 1
+      run: |
+        echo "Bringing up the stack in background..."
+        docker compose build
+        docker compose up -d
+        echo "Compose status:"
+        docker compose ps || true
+        echo "Containers:"
+        docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+        echo "Health check backend:"
+        curl -fsS http://localhost:8080/api/health || true
+        echo "Health check frontend (index):"
+        curl -fsS http://localhost:3000/ || true
+
     - name: Post-clean Docker space
-      if: always()
+      if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.deploy == true) }}
       run: |
         echo "Removing job images and pruning..."
         docker image rm -f demo-backend:test demo-frontend:test || true
