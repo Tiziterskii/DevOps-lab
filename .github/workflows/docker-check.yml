@@ -23,7 +23,7 @@ jobs:
   build-docker-images:
     # WAŻNE: Używamy Twojej maszyny wirtualnej (runnera)
     runs-on: self-hosted
-    timeout-minutes: 20
+    timeout-minutes: 60
     env:
       DOCKER_HOST: unix:///run/docker.sock
     
@@ -95,6 +95,24 @@ jobs:
         curl -fsS http://localhost:8080/api/health || true
         echo "Health check frontend (index):"
         curl -fsS http://localhost:3000/ || true
+
+    - name: Auto-deploy disk check and cleanup
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main') }}
+      run: |
+        echo "=== Disk usage before auto-deploy ==="; df -h || true
+        echo "=== Docker disk usage before ==="; docker system df || true
+        FREE_MB=$(df -Pm / | awk 'NR==2 {print $4}'); echo "Free space: ${FREE_MB} MB"
+        if [ "${FREE_MB}" -lt 5000 ]; then
+          echo "Less than 5GB free. Pruning aggressively..."
+          docker container prune -f || true
+          docker image prune -af || true
+          docker builder prune -af || true
+          docker volume prune -f || true
+          FREE_MB=$(df -Pm / | awk 'NR==2 {print $4}'); echo "Free after prune: ${FREE_MB} MB"
+          if [ "${FREE_MB}" -lt 5000 ]; then
+            echo "Still <5GB free. Aborting auto-deploy to avoid failure."; exit 1
+          fi
+        fi
 
     - name: Auto docker compose up on push to main
       if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main') }}
