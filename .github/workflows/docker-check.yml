@@ -12,6 +12,8 @@ jobs:
     # WAŻNE: Używamy Twojej maszyny wirtualnej (runnera)
     runs-on: self-hosted
     timeout-minutes: 20
+    env:
+      DOCKER_HOST: unix:///run/docker.sock
     
     steps:
     - name: Checkout code
@@ -40,6 +42,11 @@ jobs:
         echo "Docker socket perms:"
         ls -l /var/run/docker.sock || ls -l /run/docker.sock || true
         docker info || true
+
+    - name: Verify Docker connectivity
+      run: |
+        echo "Checking docker ps via $DOCKER_HOST"
+        docker ps
 
     - name: Build Backend Image
       # Buduje backend używając Twojego pliku DockerfileBuild
