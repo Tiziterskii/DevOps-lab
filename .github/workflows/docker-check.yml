@@ -96,8 +96,20 @@ jobs:
         echo "Health check frontend (index):"
         curl -fsS http://localhost:3000/ || true
 
+    - name: Auto docker compose up on push to main
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main') }}
+      env:
+        COMPOSE_DOCKER_CLI_BUILD: 1
+        DOCKER_BUILDKIT: 1
+      run: |
+        echo "Auto-deploy: bringing up stack due to push to main..."
+        docker compose build
+        docker compose up -d
+        docker compose ps || true
+        docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+
     - name: Post-clean Docker space
-      if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.deploy == true) }}
+      if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.deploy == true) && !(github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')) }}
       run: |
         echo "Removing job images and pruning..."
         docker image rm -f demo-backend:test demo-frontend:test || true
