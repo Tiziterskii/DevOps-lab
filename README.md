@@ -1,5 +1,5 @@
 # DemoWebService - Full Stack Application w Docker
-<!-- Automatyczne pobieranie na serwie linux test -->
+<!-- Automatyczne pobieranie na serwie linux test #2 -->
 Kompletna aplikacja webowa składająca się z 3 kontenerów Docker połączonych wirtualną siecią.
 
 ## 🏗️ Architektura
