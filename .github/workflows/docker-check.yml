@@ -24,14 +24,14 @@ jobs:
         echo "=== Disk usage before ==="
         df -h || true
         echo "=== Docker disk usage before ==="
-        docker system df || true
+        sudo -n docker system df || true
 
     - name: Pre-clean Docker space
       run: |
         echo "Pruning unused Docker data before build..."
-        docker container prune -f || true
-        docker image prune -af || true
-        docker builder prune -af || true
+        sudo -n docker container prune -f || true
+        sudo -n docker image prune -af || true
+        sudo -n docker builder prune -af || true
 
     - name: Docker diagnostics
       run: |
@@ -41,29 +41,29 @@ jobs:
         groups || true
         echo "Docker socket perms:"
         ls -l /var/run/docker.sock || ls -l /run/docker.sock || true
-        docker info || true
+        sudo -n docker info || true
 
     - name: Verify Docker connectivity
       run: |
         echo "Checking docker ps via $DOCKER_HOST"
-        docker ps
+        sudo -n docker ps
 
     - name: Build Backend Image
       # Buduje backend używając Twojego pliku DockerfileBuild
-      run: docker build -f DockerfileBuild -t demo-backend:test .
+      run: sudo -n docker build -f DockerfileBuild -t demo-backend:test .
 
     - name: Build Frontend Image
       # Buduje frontend używając Twojego pliku DockerfileFrontend
-      run: docker build -f DockerfileFrontend -t demo-frontend:test .
+      run: sudo -n docker build -f DockerfileFrontend -t demo-frontend:test .
 
     - name: Post-clean Docker space
       if: always()
       run: |
         echo "Removing job images and pruning..."
-        docker image rm -f demo-backend:test demo-frontend:test || true
-        docker container prune -f || true
-        docker image prune -af || true
-        docker builder prune -af || true
+        sudo -n docker image rm -f demo-backend:test demo-frontend:test || true
+        sudo -n docker container prune -f || true
+        sudo -n docker image prune -af || true
+        sudo -n docker builder prune -af || true
 
     - name: Disk usage (after)
       if: always()
@@ -71,4 +71,4 @@ jobs:
         echo "=== Disk usage after ==="
         df -h || true
         echo "=== Docker disk usage after ==="
-        docker system df || true
+        sudo -n docker system df || true
