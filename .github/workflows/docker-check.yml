@@ -3,12 +3,20 @@ name: Docker Build Check
 # Uruchamiaj tylko na Twoich branchach
 on:
   push:
-    timeout-minutes: 20
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
 jobs:
+  build-docker-images:
+    # WAŻNE: Używamy Twojej maszyny wirtualnej (runnera)
+    runs-on: self-hosted
+    timeout-minutes: 20
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Disk usage (before)
       run: |
         echo "=== Disk usage before ==="
@@ -23,12 +31,19 @@ jobs:
         docker image prune -af || true
         docker builder prune -af || true
 
-  build-docker-images:
-    # WAŻNE: Używamy Twojej maszyny wirtualnej (runnera)
-    runs-on: self-hosted
-    
-    steps:
-    - name: Checkout code
+    - name: Docker diagnostics
+      run: |
+        echo "USER: $(whoami)"
+        docker --version || true
+        groups || true
+        docker info || true
+
+    - name: Build Backend Image
+      # Buduje backend używając Twojego pliku DockerfileBuild
+      run: docker build -f DockerfileBuild -t demo-backend:test .
+
+    - name: Build Frontend Image
+      # Buduje frontend używając Twojego pliku DockerfileFrontend
       run: docker build -f DockerfileFrontend -t demo-frontend:test .
 
     - name: Post-clean Docker space
@@ -47,18 +62,3 @@ jobs:
         df -h || true
         echo "=== Docker disk usage after ==="
         docker system df || true
-
-    - name: Docker diagnostics
-      run: |
-        echo "USER: $(whoami)"
-        docker --version || true
-        groups || true
-        docker info || true
-
-    - name: Build Backend Image
-      # Buduje backend używając Twojego pliku DockerfileBuild
-      run: docker build -f DockerfileBuild -t demo-backend:test .
-
-    - name: Build Frontend Image
-      # Buduje frontend używając Twojego pliku DockerfileFrontend
-      run: docker build -f DockerfileFrontend -t demo-frontend:test .
