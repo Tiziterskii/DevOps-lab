@@ -16,6 +16,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Docker diagnostics
+      run: |
+        echo "USER: $(whoami)"
+        docker --version || true
+        groups || true
+        docker info || true
+
     - name: Build Backend Image
       # Buduje backend używając Twojego pliku DockerfileBuild
       run: docker build -f DockerfileBuild -t demo-backend:test .
