@@ -34,8 +34,11 @@ jobs:
     - name: Docker diagnostics
       run: |
         echo "USER: $(whoami)"
+        echo "ID: $(id)"
         docker --version || true
         groups || true
+        echo "Docker socket perms:"
+        ls -l /var/run/docker.sock || ls -l /run/docker.sock || true
         docker info || true
 
     - name: Build Backend Image
