@@ -3,18 +3,50 @@ name: Docker Build Check
 # Uruchamiaj tylko na Twoich branchach
 on:
   push:
+    timeout-minutes: 20
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
 jobs:
+    - name: Disk usage (before)
+      run: |
+        echo "=== Disk usage before ==="
+        df -h || true
+        echo "=== Docker disk usage before ==="
+        docker system df || true
+
+    - name: Pre-clean Docker space
+      run: |
+        echo "Pruning unused Docker data before build..."
+        docker container prune -f || true
+        docker image prune -af || true
+        docker builder prune -af || true
+
   build-docker-images:
     # WAŻNE: Używamy Twojej maszyny wirtualnej (runnera)
     runs-on: self-hosted
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      run: docker build -f DockerfileFrontend -t demo-frontend:test .
+
+    - name: Post-clean Docker space
+      if: always()
+      run: |
+        echo "Removing job images and pruning..."
+        docker image rm -f demo-backend:test demo-frontend:test || true
+        docker container prune -f || true
+        docker image prune -af || true
+        docker builder prune -af || true
+
+    - name: Disk usage (after)
+      if: always()
+      run: |
+        echo "=== Disk usage after ==="
+        df -h || true
+        echo "=== Docker disk usage after ==="
+        docker system df || true
 
     - name: Docker diagnostics
       run: |
