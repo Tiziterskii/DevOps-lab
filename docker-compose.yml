@@ -3,6 +3,8 @@ services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: demowebservice-db
+    profiles:
+      - db
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=YourStrong@Passw0rd
@@ -26,6 +28,8 @@ services:
       context: .
       dockerfile: DockerfileBuild
     container_name: demowebservice-api
+    profiles:
+      - app
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -45,6 +49,8 @@ services:
       context: .
       dockerfile: DockerfileFrontend
     container_name: demowebservice-frontend
+    profiles:
+      - app
     depends_on:
       - backend
     ports:

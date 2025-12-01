@@ -110,8 +110,15 @@ jobs:
           docker volume prune -f || true
           FREE_MB=$(df -Pm / | awk 'NR==2 {print $4}'); echo "Free after prune: ${FREE_MB} MB"
           if [ "${FREE_MB}" -lt 5000 ]; then
-            echo "Still <5GB free. Aborting auto-deploy to avoid failure."; exit 1
+            echo "Still <5GB free. Switching to minimal profile (app only, no db).";
+            echo "COMPOSE_PROFILES=app" >> $GITHUB_ENV
+          else
+            echo "Enough space after prune for full stack.";
+            echo "COMPOSE_PROFILES=app,db" >> $GITHUB_ENV
           fi
+        else
+          echo "Sufficient space (>=5GB). Using full stack.";
+          echo "COMPOSE_PROFILES=app,db" >> $GITHUB_ENV
         fi
 
     - name: Auto docker compose up on push to main
@@ -121,6 +128,7 @@ jobs:
         DOCKER_BUILDKIT: 1
       run: |
         echo "Auto-deploy: bringing up stack due to push to main..."
+        echo "Profiles: $COMPOSE_PROFILES"
         docker compose build
         docker compose up -d
         docker compose ps || true
