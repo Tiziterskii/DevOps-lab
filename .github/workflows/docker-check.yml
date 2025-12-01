@@ -3,9 +3,9 @@ name: Docker Build Check
 # Uruchamiaj tylko na Twoich branchach
 on:
   push:
-    branches: [ "my-branch", "new-branch" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "my-branch", "new-branch" ]
+    branches: [ "main" ]
 
 jobs:
   build-docker-images:
