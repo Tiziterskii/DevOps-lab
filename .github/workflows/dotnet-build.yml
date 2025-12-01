@@ -11,6 +11,11 @@ jobs:
   build-dotnet:
     # WAŻNE: Używamy Twojej maszyny wirtualnej
     runs-on: self-hosted
+    timeout-minutes: 15
+    
+    env:
+      DOTNET_ROOT: /usr/share/dotnet
+      PATH: /usr/share/dotnet:/usr/bin:$PATH
 
     steps:
     - name: Checkout code
@@ -20,14 +25,11 @@ jobs:
       run: |
         echo "USER: $(whoami)"
         uname -a
-        dotnet --info
+        which dotnet || echo "dotnet not in default PATH"
+        /usr/bin/dotnet --version || echo "dotnet not in /usr/bin"
+        export PATH="/usr/share/dotnet:/usr/bin:$PATH"
+        dotnet --version
         ls -la
-
-    # Konfiguracja środowiska .NET 9.0
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 9.0.x
 
     # Pobranie zależności (NuGet)
     - name: Restore dependencies
