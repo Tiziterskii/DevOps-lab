@@ -30,9 +30,6 @@ services:
     container_name: demowebservice-api
     profiles:
       - app
-    depends_on:
-      sqlserver:
-        condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080

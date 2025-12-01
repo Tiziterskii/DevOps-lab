@@ -129,8 +129,15 @@ jobs:
       run: |
         echo "Auto-deploy: bringing up stack due to push to main..."
         echo "Profiles: $COMPOSE_PROFILES"
-        docker compose build
-        docker compose up -d
+        PROFILE_ARGS=""
+        if [ -n "$COMPOSE_PROFILES" ]; then
+          for p in $(echo $COMPOSE_PROFILES | tr ',' ' '); do
+            PROFILE_ARGS="$PROFILE_ARGS --profile $p"
+          done
+        fi
+        echo "Using compose args: $PROFILE_ARGS"
+        docker compose $PROFILE_ARGS build
+        docker compose $PROFILE_ARGS up -d
         docker compose ps || true
         docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
 
