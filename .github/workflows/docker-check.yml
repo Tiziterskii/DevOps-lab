@@ -1,6 +1,5 @@
 name: Docker Build Check
 
-# Uruchamiaj tylko na Twoich branchach
 on:
   push:
     branches: [ "main" ]
@@ -21,7 +20,6 @@ on:
 
 jobs:
   build-docker-images:
-    # WAŻNE: Używamy Twojej maszyny wirtualnej (runnera)
     runs-on: self-hosted
     timeout-minutes: 60
     env:
@@ -65,11 +63,9 @@ jobs:
         docker ps
 
     - name: Build Backend Image
-      # Buduje backend używając Twojego pliku DockerfileBuild
       run: docker build -f DockerfileBuild -t demo-backend:test .
 
     - name: Build Frontend Image
-      # Buduje frontend używając Twojego pliku DockerfileFrontend
       run: docker build -f DockerfileFrontend -t demo-frontend:test .
 
     - name: Optional docker compose pull
