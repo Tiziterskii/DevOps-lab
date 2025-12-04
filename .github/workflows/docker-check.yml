@@ -17,6 +17,11 @@ on:
         required: false
         type: boolean
         default: false
+      deploy_k8s:
+        description: "Deploy to Minikube (K8s)"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-docker-images:
