@@ -146,6 +146,60 @@ jobs:
         docker compose ps || true
         docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
 
+    - name: Auto-deploy to Kubernetes on push to main
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main') }}
+      run: |
+        echo "=== Auto-deploying to Kubernetes ==="
+        
+        # Check if Minikube is installed and running
+        if ! command -v minikube &> /dev/null; then
+          echo "Minikube not installed, skipping K8s deployment"
+          exit 0
+        fi
+        
+        # Start Minikube if not running
+        if ! minikube status | grep -q "Running"; then
+          echo "Starting Minikube..."
+          minikube start --driver=docker --cpus=2 --memory=4096
+        fi
+        
+        # Use Minikube's Docker daemon
+        eval $(minikube docker-env)
+        
+        # Build images in Minikube context (no cache to ensure fresh build)
+        echo "Building images for Kubernetes..."
+        docker build --no-cache -f DockerfileBuild -t devops-lab-backend:latest .
+        docker build --no-cache -f DockerfileFrontend -t devops-lab-frontend:latest .
+        
+        # Apply Kubernetes manifests
+        echo "Applying K8s manifests..."
+        kubectl apply -f k8s/sqlserver-deployment.yaml
+        kubectl apply -f k8s/backend-deployment.yaml
+        kubectl apply -f k8s/frontend-deployment.yaml
+        
+        # Restart deployments to pick up new images
+        kubectl rollout restart deployment/backend
+        kubectl rollout restart deployment/frontend
+        
+        # Wait for deployments
+        echo "Waiting for deployments..."
+        kubectl wait --for=condition=available --timeout=300s deployment/backend || true
+        kubectl wait --for=condition=available --timeout=300s deployment/frontend || true
+        
+        # Setup port forwarding
+        echo "Setting up port forwarding..."
+        pkill -f "port-forward.*frontend.*30080" || true
+        nohup kubectl port-forward --address 0.0.0.0 svc/frontend 30080:80 > /tmp/k8s-port-forward.log 2>&1 &
+        sleep 3
+        
+        # Show status
+        echo "=== K8s Status ==="
+        kubectl get pods
+        kubectl get svc
+        echo "=== Access ==="
+        echo "Frontend: http://localhost:30080"
+        echo "Minikube IP: $(minikube ip)"
+
     - name: Post-clean Docker space
       if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.deploy == true) && !(github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')) }}
       run: |
